@@ -128,4 +128,7 @@ if SYSTEM == "Linux":
     backup(appimage, not is_patched)
     appimage_repack(appimage, appimage_unpacked)
 
+# Clean Database
+clean_db()
+
 pause()

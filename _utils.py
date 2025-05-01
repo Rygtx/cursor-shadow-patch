@@ -394,3 +394,69 @@ def replace(
             f"{GREEN}[√] Patched {replaced_count} pattern{'' if count == 1 else 's'}{RESET}"
         )
     return data
+
+
+def get_db_path():
+    match SYSTEM:
+        case "Windows":
+            db = (
+                path(os.getenv("APPDATA", ""))
+                / "Cursor"
+                / "User"
+                / "globalStorage"
+                / "state.vscdb"
+            )
+        case "Linux":
+            db = (
+                path(os.getenv("HOME", ""))
+                / ".config"
+                / "Cursor"
+                / "User"
+                / "globalStorage"
+                / "state.vscdb"
+            )
+        case "Darwin":
+            db = (
+                path(os.getenv("HOME", ""))
+                / "Library"
+                / "Application Support"
+                / "Cursor"
+                / "User"
+                / "globalStorage"
+                / "state.vscdb"
+            )
+        case _:
+            print(f"{RED}[ERR] Unsupported OS: {SYSTEM}{RESET}")
+            pause()
+            exit()
+    return path(db)
+
+
+def clean_db():
+    print(f"\n> Clean Database")
+
+    import sqlite3
+
+    db = get_db_path()
+    if db.exists():
+        print(f"> Found database: {db}")
+        try:
+            conn = sqlite3.connect(db)
+            cur = conn.cursor()
+            cur.execute(
+                "DELETE FROM ItemTable WHERE key IN (?, ?)",
+                ("cursorAuth/cachedEmail", "cursorai/serverConfig"),
+            )
+            conn.commit()
+            conn.close()
+            print(f"{GREEN}[√] Cleaned cachedEmail and serverConfig{RESET}")
+        except sqlite3.Error as e:
+            import traceback
+
+            print(
+                f"{RED}[ERR] Failed to clean database:{RESET}\n{traceback.format_exc()}"
+            )
+            pause()
+            exit()
+    else:
+        print(f"{BLUE}[i] Database not exist, skip{RESET}")
